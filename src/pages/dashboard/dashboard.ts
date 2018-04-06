@@ -68,6 +68,10 @@ export class DashboardPage implements OnInit {
 		return this.connectivity.isOnline();
 	}
 
+	isForcedOffline() {
+		return this.connectivity.isForcedOfflineActive();
+	}
+
 	isProduction() {
 		return this.settings.isProductionEndpoint();
 	}

@@ -39,7 +39,7 @@ export class FormBuilderService {
 				return Observable.of(this.forms[form]);
 			}
 
-			return Observable.of({});
+			return Observable.empty();
 
 		}
 
@@ -177,6 +177,12 @@ export class Form {
 				if(f.type === 'model_field') {
 					if(!data[f.options.key]) continue;
 					output[field] = data[f.options.key][f.options.field];
+					continue;
+				}
+
+				if(f.type === 'boolean' && f.options.required && !data[field]) {
+					console.log("[form_builder] fixing required undefined boolean field: ", field);
+					output[field] = false;
 					continue;
 				}
 

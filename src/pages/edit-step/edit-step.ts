@@ -132,7 +132,7 @@ export class EditStepPage implements OnInit {
 
 	saveOnline() {
 
-		this.form.rebuild(this.formTree, this.fields);
+		this.step.fields = this.form.rebuild(this.formTree, this.fields);
 
 		if(!this.connectivity.isOnline()) {
 			return this.saveLocally();
@@ -243,7 +243,7 @@ export class EditStepPage implements OnInit {
 
 	saveAndComplete() {
 
-		this.form.rebuild(this.formTree, this.fields);
+		this.step.fields = this.form.rebuild(this.formTree, this.fields);
 
 		if(!this.connectivity.isOnline()) {
 			return this.saveLocally(true);

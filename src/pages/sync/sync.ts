@@ -76,16 +76,13 @@ export class SyncPage implements OnInit {
 		return (this.auth.isLoggedIn() && this.auth.getUser().type === 'agente_comunitario');
 	}
 
-	doFullDownload() {
+	doFullDownload(setOfflineModeAfterComplete:boolean = false) {
 
 		this.setLoading("Baixando informações...");
 
 		let current = 0;
 
 		let downloads = [
-			{name: 'Dados estáticos', skipIfAgente: false, closure: () => this.staticData.refresh().toPromise()},
-			{name: 'Formulário de alerta', skipIfAgente: false, closure: () => this.formBuilder.getForm("alerta").toPromise()},
-			{name: 'Formulário de pesquisa', skipIfAgente: true, closure: () => this.formBuilder.getForm("pesquisa").toPromise()},
 			{name: 'Minhas atribuições', skipIfAgente: true, closure: () => this.children.getUserAttributions(this.auth.userID).toPromise().then((assignments) => {
 
 				console.log("[sync] Downloading children data...");
@@ -97,29 +94,48 @@ export class SyncPage implements OnInit {
 					return (!!item && !!item.id);
 				});
 
-				return new AsyncJob(
-					() => {
-						let assignment = assignments.shift();
+				return new Promise((resolve, reject) => {
+					new AsyncJob(
+						() => {
+							let assignment = assignments.shift();
+							subcurrent = subtotal - assignments.length;
 
-						console.log("[sync.subtask] Assignment: ", assignment);
+							console.log("[sync.subtask] Assignment: ", assignment);
 
-						subcurrent = subtotal - assignments.length;
-
-						this.loader.setContent("Baixando (" + current + "/" + total + "): Atribuição " + subcurrent + " de " + subtotal + "...");
-
-						console.log("[sync] #", assignment.id, "...");
-
-						return this.children.getAlert(assignment.id).toPromise().then(() => {
-							console.log("\t [sync] #", assignment.id, "\t ALERT OK");
-							return this.children.getStepData(assignment.current_step_type, assignment.current_step_id).toPromise().then(() => {
-								console.log("\t [sync] #", assignment.id, "\t CURRENT STEP OK");
+							if(!assignment) {
 								return true;
-							});
-						})
-					}
-				);
+							}
+
+							this.loader.setContent("Baixando (" + current + "/" + total + "): Atribuição " + subcurrent + " de " + subtotal + "...");
+
+							console.log("[sync] #", assignment.id, "...");
+
+							return this.children.getAlert(assignment.id).toPromise()
+								.then(() => {
+									console.log("\t [sync] #", assignment.id, "\t ALERT OK");
+									return this.children.getStepData(assignment.current_step_type, assignment.current_step_id).toPromise();
+								})
+								.then(() => {
+									console.log("\t [sync] #", assignment.id, "\t CURRENT STEP OK");
+									return true;
+								})
+						},
+						(res) => {
+							if(subcurrent === subtotal) {
+								resolve(true);
+							}
+						},
+						(err) => {
+							reject(err);
+						}
+					);
+				})
 
 			})},
+
+			{name: 'Dados estáticos', skipIfAgente: false, closure: () => this.staticData.refresh().toPromise()},
+			{name: 'Formulário de alerta', skipIfAgente: false, closure: () => this.formBuilder.getForm("alerta").toPromise()},
+			{name: 'Formulário de pesquisa', skipIfAgente: true, closure: () => this.formBuilder.getForm("pesquisa").toPromise()},
 
 		];
 
@@ -156,9 +172,17 @@ export class SyncPage implements OnInit {
 				console.log("[sync] Sync completed, responses: ", responses);
 				console.log("[sync] Tasks remaining: ", downloads.length);
 
-				this.setIdle();
-				this.lastFullSync = new Date();
-				this.storage.set("last_full_sync", this.lastFullSync.toISOString());
+				if(downloads.length <= 0) {
+					console.log("[sync] All tasks completed! Dismissing progress...");
+
+					this.setIdle();
+					this.lastFullSync = new Date();
+					this.storage.set("last_full_sync", this.lastFullSync.toISOString());
+
+					if(setOfflineModeAfterComplete) {
+						this.connectivity.setForcedOffline(true);
+					}
+				}
 
 			},
 			(error) => {
@@ -294,6 +318,18 @@ export class SyncPage implements OnInit {
 		});
 
 		confirmPrompt.present();
+	}
+
+	startOfflineMode() {
+		this.doFullDownload(true);
+	}
+
+	exitOfflineMode() {
+		this.connectivity.setForcedOffline(false);
+
+		if(this.connectivity.isOnline()) {
+			this.doFullUpload();
+		}
 	}
 
 }

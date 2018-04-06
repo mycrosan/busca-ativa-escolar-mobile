@@ -1,5 +1,5 @@
 import {Injectable} from '@angular/core';
-import {Http} from '@angular/http';
+import {Headers, Http, RequestOptionsArgs, Response} from '@angular/http';
 import 'rxjs/add/operator/map';
 import {Storage} from "@ionic/storage";
 import {AppSettingsService} from "./settings.service";
@@ -53,18 +53,17 @@ export class AuthService {
 		});
 	}
 
-	refreshToken() : Promise<string> {
+	refreshToken() : Promise<any> {
 		const tokenRequest = {
 			grant_type: 'refresh',
 			token: this.token
 		};
 
-		const options = {
-			accept: 'application/json',
-		};
+		const headers = new Headers();
+		headers.set('Accept', 'application/json');
 
 		return this.http
-			.post(this.getTokenURI(), tokenRequest, options)
+			.post(this.getTokenURI(), tokenRequest, {headers: headers})
 			.toPromise()
 			.then(this.handleAuthResponse.bind(this), this.handleAuthError.bind(this));
 	}
@@ -77,17 +76,16 @@ export class AuthService {
 			password: password
 		};
 
-		const options = {
-			accept: 'application/json',
-		};
+		let headers = new Headers();
+		headers.set('Accept', 'application/json');
 
 		return this.http
-			.post(this.getTokenURI(), tokenRequest, options)
+			.post(this.getTokenURI(), tokenRequest, {headers: headers})
 			.toPromise()
 			.then(this.handleAuthResponse.bind(this), this.handleAuthError.bind(this));
 	};
 
-	handleAuthResponse(response) : Promise<Object> {
+	handleAuthResponse(response) : Promise<any> {
 
 		if(response.status !== 200) {
 			console.log("[auth::login] Rejecting Auth response! Status= ", response.status);
@@ -124,7 +122,7 @@ export class AuthService {
 			.then(() => {
 				return this.storage.get('session')
 			})
-			.then((session) => {
+			.then((session:any) => {
 				if(!session) return Promise.resolve({});
 
 				session = JSON.parse(session);
@@ -155,7 +153,7 @@ export class AuthService {
 
 	}
 
-	handleAuthError(response) {
+	handleAuthError(response) : Promise<any> {
 		console.error("[auth::login] API error: ", response);
 		throw (response.json()) ? response.json(): response;
 	}

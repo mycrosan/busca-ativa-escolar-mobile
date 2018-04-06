@@ -1,8 +1,10 @@
 import {Injectable, Pipe, PipeTransform} from "@angular/core";
+import {Connection} from "../declarations";
 
 @Injectable()
 export class ConnectivityService {
 
+	isForcedOffline = false;
 	currentCallback = null;
 	currentStatus = false;
 	timer = null;
@@ -16,13 +18,23 @@ export class ConnectivityService {
 
 		if(navigator.connection) {
 			this.onlineStatuses = [
-				Connection.ETHERNET,
+				/*Connection.ETHERNET,
 				Connection.WIFI,
 				Connection.CELL_2G,
 				Connection.CELL_3G,
 				Connection.CELL_4G,
 				Connection.CELL,
-				Connection.UNKNOWN
+				Connection.UNKNOWN*/
+				'ethernet',
+				'wifi',
+				'cell',
+				'cell_2g',
+				'cell_3g',
+				'cell_4g',
+				'2g',
+				'3g',
+				'4g',
+				'unknown'
 			];
 		}
 
@@ -47,7 +59,20 @@ export class ConnectivityService {
 		this.currentStatus = status;
 	}
 
+	isForcedOfflineActive():boolean {
+		return this.isForcedOffline;
+	}
+
+	setForcedOffline(isOffline:boolean) : void {
+		this.isForcedOffline = isOffline;
+	}
+
 	isOnline():boolean {
+
+		if(this.isForcedOffline) {
+			return false;
+		}
+
 		if(navigator.connection) {
 			return (this.onlineStatuses.indexOf(navigator.connection.type) !== -1);
 		}

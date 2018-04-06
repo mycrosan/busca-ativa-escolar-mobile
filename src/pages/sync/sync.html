@@ -10,7 +10,11 @@
 				Modo Online
 			</ion-item>
 
-			<ion-item color="danger" *ngIf="!connectivity.isOnline()">
+			<ion-item color="danger" *ngIf="!connectivity.isOnline() && !connectivity.isForcedOffline">
+				Modo Offline - Sem conexão!
+			</ion-item>
+
+			<ion-item color="warning" *ngIf="!connectivity.isOnline()">
 				Modo Offline
 			</ion-item>
 		</ion-list>
@@ -21,6 +25,7 @@
 			<p>Para usar o aplicativo offline (sem conexão com a internet), você deve primeiro baixar os dados para uso offline, usando a opção <strong>Baixar dados para uso offline</strong> no menu abaixo.</p>
 			<p>Quando o aplicativo estiver sem conexão, os alertas e pesquisas salvos serão guardados localmente no seu dispositivo.</p>
 			<p>Quando a conexão estiver disponível novamente, os dados coletados poderão ser publicados na plataforma usando a opção <strong>Publicar dados na plataforma</strong> no menu abaixo.</p>
+			<p>Alternativamente, você poderá entrar em Modo Offline antes de sair para uma região com conexão indisponível ou ruim, usando a opção <strong>Entrar no modo OFFLINE</strong>.</p>
 		</ion-card-content>
 	</ion-card>
 
@@ -32,6 +37,14 @@
 		<button ion-item clear icon-left [disabled]="!connectivity.isOnline()" (click)="doFullDownload()">
 			<ion-icon name="cloud-download"></ion-icon>
 			Baixar dados para uso offline
+		</button>
+		<button ion-item color="primary" clear icon-left *ngIf="!connectivity.isForcedOfflineActive()" (click)="startOfflineMode()">
+			<ion-icon name="walk"></ion-icon>
+			Entrar no modo OFFLINE
+		</button>
+		<button ion-item color="primary" clear icon-left *ngIf="connectivity.isForcedOfflineActive()" (click)="exitOfflineMode()">
+			<ion-icon name="wifi"></ion-icon>
+			Sair do modo OFFLINE e sincronizar
 		</button>
 		<div ion-item clear>
 			<h3>Último download:</h3>

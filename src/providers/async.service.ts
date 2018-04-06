@@ -47,11 +47,11 @@ export class AsyncJob {
 
 	tick() {
 
-		console.log("[async_job] Job tick! ", this);
+		//console.log("[async_job] Job tick! ", this);
 
 		let promise = this.taskClosure.call(this, []);
 
-		console.log("\t[async_job] Job tick promise: ", promise);
+		//console.log("\t[async_job] Job tick promise: ", promise);
 
 		if(!promise || !promise.then) {
 
@@ -64,7 +64,7 @@ export class AsyncJob {
 		promise.then(
 			(res) => {
 
-				console.log("\t[async_job] Promise then: ", res);
+				//console.log("\t[async_job] Promise then: ", res);
 
 				if(!res) {
 					console.log("\t[async_job] Result is false, job is completed!");

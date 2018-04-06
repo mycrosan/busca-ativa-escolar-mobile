@@ -36,7 +36,7 @@ export class ChildrenService {
 
 		}
 
-		return this.api.post('children/search', {assigned_user_id: userID, current_step_type: 'BuscaAtivaEscolar\\CaseSteps\\Pesquisa'})
+		return this.api.post('children/search', {assigned_user_id: userID, step_slug: 'pesquisa', case_status: ['in_progress']})
 				.map((data) => {
 					if(data && data.results) {
 						if(callback) callback(data.results);
@@ -117,16 +117,22 @@ export class ChildrenService {
 
 		console.log("[children.update_step_fields] ", step.id, " fields=", fields);
 
-		return this.api.post('steps/' + stepType + '/' + step.id, fields).subscribe(
-			(response) => {
-				if(!callback) return;
-				callback(response);
-			},
-			(error:any) => {
-				if(!onError) return;
-				onError(error);
-			}
-		);
+		let obs = this.api.post('steps/' + stepType + '/' + step.id, fields);
+
+		if(callback) {
+			return obs.subscribe(
+				(response) => {
+					if(!callback) return;
+					callback(response);
+				},
+				(error:any) => {
+					if(!onError) return;
+					onError(error);
+				}
+			);
+		}
+
+		return obs;
 	}
 
 	completeStep(step:any, callback:Function = null, onError:Function = null) : any {
